@@ -42,8 +42,8 @@ test("Create User Flow", async ({request, baseURL}) => {
 
     const res = await response.json();
     console.log(res);
-    await expect(response.status()).toBe(200);
-    await expect(response.ok()).toBeTruthy();
+    expect(response.status()).toBe(200);
+    expect(response.ok()).toBeTruthy();
     emails = res.data.rows.map((user) => user.email);
   });
 
@@ -86,6 +86,6 @@ for (const user of missingFieldUsers) {
     });
     await validation.input.isMissingField({response, status: 422});
     const res = await response.json();
-    await expect(res.message).toBe(user.message);
+    expect(res.message).toBe(user.message);
   });
 }
