@@ -3,16 +3,27 @@ import {validUser, invalidUsers, missingFieldUsers} from "./userData.js";
 import {validation} from "./validation.js";
 const {
   initApi,
-  buildPayload,
   generateMissingFieldCases,
-  generateInvalidValueCases,
+  nullValueCases,
+  onlySpaceValueCases,
 } = require("../utils/apiGenerators.js");
-
 const fs = require("fs");
 const path = require("path");
 
 let token;
 let api;
+
+const userDefaults = {
+  email: "alice@example.com",
+  password: "P@ssw0rd",
+};
+
+const userCreateDefaults = {
+  name: "Alice",
+  email: "alice@example.com",
+  password: "P@ssw0rd",
+  role: "admin",
+};
 
 // Helper: normalize message from various shapes (object, JSON-string, error string)
 function normalizeMessage(raw) {
@@ -53,6 +64,19 @@ function normalizeMessage(raw) {
 
 // Create aggregated report and throw if failures exist
 const createReportAndThrow = (title, results) => {
+  //delete old reports
+  const outDir = path.join(process.cwd(), "tests", "User");
+  if (fs.existsSync(outDir)) {
+    const files = fs.readdirSync(outDir);
+    for (const file of files) {
+      if (file.startsWith("Report_") && file.endsWith(".json")) {
+        fs.unlinkSync(path.join(outDir, file));
+      }
+    }
+  }
+
+  // analyze results
+
   const failures = results.filter((r) => !r.passed);
   const timestamp = new Date().toISOString();
 
@@ -86,7 +110,6 @@ const createReportAndThrow = (title, results) => {
 
   // ensure directory exists and write report
   const safeTitle = title.replace(/[^a-zA-Z0-9-_]/g, "_");
-  const outDir = path.join(process.cwd(), "tests", "User");
   const fileName = `Report_${safeTitle}_${Date.now()}.json`;
   const outPath = path.join(outDir, fileName);
   fs.mkdirSync(outDir, {recursive: true});
@@ -100,25 +123,8 @@ const createReportAndThrow = (title, results) => {
   }
 };
 
-test.beforeAll("Get Token after user login", async ({request, baseURL}) => {
-  const response = await request.post(`${baseURL}/users/login`, {
-    data: {
-      email: validUser.email,
-      password: validUser.password,
-    },
-  });
-  await validation.input.isValidLogin({response});
-  const body = await response.json();
-  token = body.token;
-});
-
 // helper to run missing-field cases for any endpoint using the api helpers
-async function runMissingFieldCases({
-  title,
-  cases,
-  callApi,
-  expectedStatus = 422,
-}) {
+async function runCases({title, cases, callApi, expectedStatus = 422}) {
   const results = [];
   for (const c of cases) {
     const desc = c.desc || JSON.stringify(c.data || c);
@@ -158,23 +164,31 @@ async function runMissingFieldCases({
   createReportAndThrow(title, results);
 }
 
+test("Get Token after user login", async ({request, baseURL}) => {
+  const response = await request.post(`${baseURL}/users/login`, {
+    data: {
+      email: validUser.email,
+      password: validUser.password,
+    },
+  });
+  await validation.input.isValidLogin({response});
+  const body = await response.json();
+  token = body.token;
+});
+
 // Login missing-field aggregate
 test("Login with Missing Fields (aggregate report)", async ({
   request,
   baseURL,
 }) => {
   api = initApi(request, baseURL);
-  const userDefaults = {
-    email: "alice@example.com",
-    password: "P@ssw0rd",
-  };
 
   const missingCases = generateMissingFieldCases(userDefaults, [
     "email",
     "password",
   ]);
 
-  await runMissingFieldCases({
+  await runCases({
     title: "Login with Missing Fields",
     cases: missingCases,
     callApi: (data) => api.login(data),
@@ -191,13 +205,6 @@ test("Create User with Missing Fields (aggregate report)", async ({
   // Ensure token exists like your other tests expect
   expect(validation.Token).toBeTruthy();
 
-  const userCreateDefaults = {
-    name: "Alice",
-    email: "alice@example.com",
-    password: "P@ssw0rd",
-    role: "admin",
-  };
-
   const missingCases = generateMissingFieldCases(userCreateDefaults, [
     "name",
     "email",
@@ -205,10 +212,25 @@ test("Create User with Missing Fields (aggregate report)", async ({
     "role",
   ]);
 
-  await runMissingFieldCases({
+  await runCases({
     title: "Create User with Missing Fields",
     cases: missingCases,
     callApi: (data) => api.createUser(data, token),
+    expectedStatus: 422,
+  });
+});
+
+//Login with empty fields
+test("Login with Null Fields", async ({request, baseURL}) => {
+  api = initApi(request, baseURL);
+
+  //use apiGenerators to create empty field cases
+  const emptyCases = nullValueCases(userDefaults);
+
+  await runCases({
+    title: "Login with Null Fields",
+    cases: emptyCases,
+    callApi: (data) => api.login(data),
     expectedStatus: 422,
   });
 });

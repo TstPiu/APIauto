@@ -1,0 +1,76 @@
+{
+  "title": "Login with Null Fields",
+  "timestamp": "2025-09-02T10:18:51.170Z",
+  "totalCases": 2,
+  "failures": 2,
+  "cases": [
+    {
+      "testCase": "null email",
+      "expected": {
+        "status": 422,
+        "message": "email is not allowed to be empty"
+      },
+      "actual": {
+        "status": 400,
+        "message": "No user found with this email."
+      },
+      "passed": false,
+      "error": null,
+      "data": {
+        "email": null,
+        "password": "P@ssw0rd"
+      }
+    },
+    {
+      "testCase": "null password",
+      "expected": {
+        "status": 422,
+        "message": "password is not allowed to be empty"
+      },
+      "actual": {
+        "status": 400,
+        "message": "No user found with this email."
+      },
+      "passed": false,
+      "error": null,
+      "data": {
+        "email": "alice@example.com",
+        "password": null
+      }
+    }
+  ],
+  "faultyCases": [
+    {
+      "testCase": "null email",
+      "expected": {
+        "status": 422,
+        "message": "email is not allowed to be empty"
+      },
+      "actual": {
+        "status": 400,
+        "message": "No user found with this email."
+      },
+      "error": null,
+      "data": {
+        "email": null,
+        "password": "P@ssw0rd"
+      }
+    },
+    {
+      "testCase": "null password",
+      "expected": {
+        "status": 422,
+        "message": "password is not allowed to be empty"
+      },
+      "actual": {
+        "status": 400,
+        "message": "No user found with this email."
+      },
+      "error": null,
+      "data": {
+        "email": "alice@example.com",
+        "password": null
+      }
+    }
+  ]
+}

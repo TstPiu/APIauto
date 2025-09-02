@@ -30,17 +30,18 @@ export function generateMissingFieldCases(
     cases.push({desc, data: multi, message});
   }
   return cases;
+  generateMissingFieldCases;
 }
 
 //Generate test cases for empty or space as value
-export function nullValueCases(defaults = {}, fields = [], messageFormat) {
+export function nullValueCases(defaults = {}, messageFormat) {
   const cases = [];
-  fields.forEach((field) => {
+  Object.keys(defaults).forEach((field) => {
     const data = {...defaults, [field]: null};
     const desc = `null ${field}`;
     const messageForNull = messageFormat
       ? messageFormat([field])
-      : `${field} must not be null`;
+      : `${field} is not allowed to be empty`;
     cases.push({desc, data, field, invalid: null, message: messageForNull});
   });
   return cases;
