@@ -160,7 +160,6 @@ async function runCases({title, cases, callApi, expectedStatus = 422}) {
       });
     }
   }
-
   createReportAndThrow(title, results);
 }
 
@@ -174,26 +173,6 @@ test("Get Token after user login", async ({request, baseURL}) => {
   await validation.input.isValidLogin({response});
   const body = await response.json();
   token = body.token;
-});
-
-// Login missing-field aggregate
-test("Login with Missing Fields (aggregate report)", async ({
-  request,
-  baseURL,
-}) => {
-  api = initApi(request, baseURL);
-
-  const missingCases = generateMissingFieldCases(userDefaults, [
-    "email",
-    "password",
-  ]);
-
-  await runCases({
-    title: "Login with Missing Fields",
-    cases: missingCases,
-    callApi: (data) => api.login(data),
-    expectedStatus: 422,
-  });
 });
 
 // Create user missing-field aggregate
@@ -220,16 +199,22 @@ test("Create User with Missing Fields (aggregate report)", async ({
   });
 });
 
-//Login with empty fields
-test("Login with Null Fields", async ({request, baseURL}) => {
+test.only("Login all test cases", async ({request, baseURL}) => {
   api = initApi(request, baseURL);
+  const missingCases = generateMissingFieldCases(userDefaults, [
+    "email",
+    "password",
+  ]);
 
-  //use apiGenerators to create empty field cases
   const emptyCases = nullValueCases(userDefaults);
 
+  const spaceCases = onlySpaceValueCases(userDefaults);
+
+  const allCases = [...missingCases, ...emptyCases, ...spaceCases];
+
   await runCases({
-    title: "Login with Null Fields",
-    cases: emptyCases,
+    title: "Login with Missing Fields",
+    cases: allCases,
     callApi: (data) => api.login(data),
     expectedStatus: 422,
   });

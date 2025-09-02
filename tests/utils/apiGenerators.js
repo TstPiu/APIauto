@@ -48,9 +48,9 @@ export function nullValueCases(defaults = {}, messageFormat) {
 }
 
 //Generate test cases for empty or space as value
-export function onlySpaceValueCases(defaults = {}, fields = [], messageFormat) {
+export function onlySpaceValueCases(defaults = {}, messageFormat) {
   const cases = [];
-  fields.forEach((field) => {
+  Object.keys(defaults).forEach((field) => {
     const data = {...defaults, [field]: "   "};
     const desc = `only space ${field}`;
     const messageForSpace = messageFormat
